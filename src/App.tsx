@@ -58,7 +58,7 @@ const AppContent: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background text-gray-100 flex flex-col">
+    <div className="min-h-screen bg-background text-gray-100 flex flex-col md:pl-64">
       <Navbar
         activeTab={activeTab}
         setActiveTab={setActiveTab}
@@ -66,7 +66,7 @@ const AppContent: React.FC = () => {
         triggerFindInteresting={handleFindInteresting}
       />
 
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 pb-20">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 pb-20 pt-4">
         {activeTab === 'home' && <Home setActiveTab={setActiveTab} triggerFindInteresting={handleFindInteresting} />}
         {activeTab === 'overview' && <Overview />}
         {activeTab === 'money' && <Money />}

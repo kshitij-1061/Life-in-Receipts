@@ -34,7 +34,7 @@ export async function loadCSVFile(url: string, maxRows?: number): Promise<RawCSV
           totalRows,
         });
       },
-      error: (error) => {
+      error: (error: any) => {
         reject(error);
       }
     });
