@@ -80,9 +80,13 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       let spReceipts: LifeReceipt[] = [];
       let hhReceipts: LifeReceipt[] = [];
 
+      const rawBase = import.meta.env.BASE_URL || './';
+      const base = rawBase.endsWith('/') ? rawBase : rawBase + '/';
+
       // 1. Load Financial Dataset
       try {
-        const finRaw = await loadCSVFile('/data/Augmented_IndiaTransactMultiFacet2024.csv');
+        const finUrl = `${base}data/Augmented_IndiaTransactMultiFacet2024.csv`;
+        const finRaw = await loadCSVFile(finUrl);
         datasetProfiles['finance'] = profileDataset('finance', 'Financial Multi-Facet', finRaw);
         finReceipts = parseFinancialData(finRaw);
       } catch (err: any) {
@@ -100,7 +104,8 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       // 2. Load Spotify Dataset (Slice top 20,000 for smooth browser rendering)
       try {
-        const spRaw = await loadCSVFile('/data/spotify_history.csv', 20000);
+        const spUrl = `${base}data/spotify_history.csv`;
+        const spRaw = await loadCSVFile(spUrl, 20000);
         datasetProfiles['spotify'] = profileDataset('spotify', 'Spotify History', spRaw);
         spReceipts = parseSpotifyData(spRaw);
       } catch (err: any) {
@@ -118,7 +123,8 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       // 3. Load Third Dataset (Daily Household)
       try {
-        const hhRaw = await loadCSVFile('/data/Daily Household Transactions.csv');
+        const hhUrl = `${base}data/Daily%20Household%20Transactions.csv`;
+        const hhRaw = await loadCSVFile(hhUrl);
         datasetProfiles['third'] = profileDataset('third', 'Daily Household Log', hhRaw);
         hhReceipts = parseThirdFacetData(hhRaw);
       } catch (err: any) {
