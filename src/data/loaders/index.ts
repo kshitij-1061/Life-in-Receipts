@@ -9,9 +9,14 @@ export interface RawCSVResult {
 }
 
 export async function loadCSVFile(url: string, maxRows?: number): Promise<RawCSVResult> {
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status} (${response.statusText || 'Error'}) when fetching ${url}`);
+  }
+  const csvText = await response.text();
+
   return new Promise((resolve, reject) => {
-    Papa.parse(url, {
-      download: true,
+    Papa.parse(csvText, {
       header: true,
       skipEmptyLines: true,
       transformHeader: (h) => sanitizeHeader(h),
