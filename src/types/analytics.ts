@@ -1,4 +1,4 @@
-import type { LifeReceipt } from './receipt';
+import type { LifeReceipt } from './data';
 
 export interface SpendingMetrics {
   totalAmount: number;
@@ -39,6 +39,7 @@ export interface ConnectionEvidence {
   signals: string[];
   supportingRecords: LifeReceipt[];
   strength: number; // 0.0 to 1.0
+  classification: 'Strong' | 'Medium' | 'Weak';
   timeDeltaMinutes?: number;
 }
 
@@ -86,5 +87,16 @@ export interface Chapter {
   dominantCategory: string;
   topArtist: string;
   summary: string;
+  supportingReceipts: LifeReceipt[];
+}
+
+export interface StorySlide {
+  id: string;
+  badge: string;
+  title: string;
+  subtitle: string;
+  narration: string;
+  dataPoints: { label: string; value: string }[];
+  evidenceExplanation: string;
   supportingReceipts: LifeReceipt[];
 }

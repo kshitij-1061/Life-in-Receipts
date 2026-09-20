@@ -2,6 +2,8 @@ import React from 'react';
 import { useData } from '../hooks/useData';
 import { Music, Mic, PlayCircle, Clock } from 'lucide-react';
 import { formatNumber, formatDuration } from '../utils/formatters';
+import { SectionHeader } from '../components/common/SectionHeader';
+import { MetricCard } from '../components/common/MetricCard';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip } from 'recharts';
 
 export const Soundtrack: React.FC = () => {
@@ -11,56 +13,43 @@ export const Soundtrack: React.FC = () => {
     <div className="space-y-8 py-6 animate-fade-in">
       
       {/* Header */}
-      <div>
-        <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-widest text-accentMusic">
-          <Music className="w-3.5 h-3.5" />
-          <span>Auditory Facet Analytics</span>
-        </div>
-        <h2 className="text-3xl font-serif font-bold text-white mt-1">
-          SOUNDTRACK & LISTENING
-        </h2>
-        <p className="text-xs text-gray-400 mt-0.5">
-          Spotify playback duration, top artists, track repetitions, skip rates, and diurnal listening cycles.
-        </p>
-      </div>
+      <SectionHeader
+        badge="Auditory Facet Analytics"
+        title="SOUNDTRACK & LISTENING"
+        subtitle="Spotify playback duration, top artists, track repetitions, skip rates, and diurnal listening cycles."
+        icon={Music}
+        badgeColor="text-accentMusic"
+      />
 
       {/* Metrics Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-        <div className="glass-card rounded-2xl p-5">
-          <div className="text-xs font-mono text-gray-400 uppercase">Listening Duration</div>
-          <div className="text-3xl font-bold font-mono text-accentMusic mt-1">
-            {Math.round(spotifyMetrics.totalListeningHours)} hrs
-          </div>
-          <div className="text-xs text-gray-400 mt-1">
-            {formatDuration(spotifyMetrics.totalListeningMs)} Total Time
-          </div>
-        </div>
+        <MetricCard
+          label="Listening Duration"
+          value={`${Math.round(spotifyMetrics.totalListeningHours)} hrs`}
+          subtext={`${formatDuration(spotifyMetrics.totalListeningMs)} Total Time`}
+          accentColor="text-accentMusic"
+        />
 
-        <div className="glass-card rounded-2xl p-5">
-          <div className="text-xs font-mono text-gray-400 uppercase">Tracks Streamed</div>
-          <div className="text-3xl font-bold font-mono text-white mt-1">
-            {formatNumber(spotifyMetrics.totalTracksPlayed)}
-          </div>
-          <div className="text-xs text-gray-400 mt-1">Individual Playback Events</div>
-        </div>
+        <MetricCard
+          label="Tracks Streamed"
+          value={formatNumber(spotifyMetrics.totalTracksPlayed)}
+          subtext="Individual Playback Events"
+          accentColor="text-white"
+        />
 
-        <div className="glass-card rounded-2xl p-5">
-          <div className="text-xs font-mono text-gray-400 uppercase">Top Artist</div>
-          <div className="text-2xl font-bold font-mono text-accentCyan mt-1 truncate">
-            {spotifyMetrics.topArtists[0]?.artist || 'N/A'}
-          </div>
-          <div className="text-xs text-gray-400 mt-1">
-            {spotifyMetrics.topArtists[0]?.count || 0} Playbacks
-          </div>
-        </div>
+        <MetricCard
+          label="Top Artist"
+          value={spotifyMetrics.topArtists[0]?.artist || 'N/A'}
+          subtext={`${spotifyMetrics.topArtists[0]?.count || 0} Playbacks`}
+          accentColor="text-accentCyan"
+        />
 
-        <div className="glass-card rounded-2xl p-5">
-          <div className="text-xs font-mono text-gray-400 uppercase">Skip Rate</div>
-          <div className="text-3xl font-bold font-mono text-amber-400 mt-1">
-            {spotifyMetrics.skipRate.toFixed(1)}%
-          </div>
-          <div className="text-xs text-gray-400 mt-1">Early Track Transitions</div>
-        </div>
+        <MetricCard
+          label="Skip Rate"
+          value={`${spotifyMetrics.skipRate.toFixed(1)}%`}
+          subtext="Early Track Transitions"
+          accentColor="text-amber-400"
+        />
       </div>
 
       {/* Top Artists & Tracks */}

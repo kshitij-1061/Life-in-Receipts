@@ -1,8 +1,6 @@
 import React, { createContext, useContext, useEffect, useState, useMemo } from 'react';
-import type { LifeReceipt } from '../types/receipt';
-import type { GlobalHealthStatus, DatasetProfile } from '../types/profile';
-import type { SpendingMetrics, SpotifyMetrics, ThirdFacetMetrics, Pattern, Chapter, ConnectionEdge, ConnectionNode } from '../types/analytics';
-import type { StorySlide } from '../analytics/storyGenerator';
+import type { LifeReceipt, GlobalHealthStatus, DatasetProfile } from '../types/data';
+import type { SpendingMetrics, SpotifyMetrics, ThirdFacetMetrics, Pattern, Chapter, ConnectionEdge, ConnectionNode, StorySlide } from '../types/analytics';
 
 import { loadCSVFile } from '../data/loaders';
 import { profileDataset } from '../data/profiler';
@@ -10,6 +8,7 @@ import { parseFinancialData } from '../data/parsers/financial';
 import { parseSpotifyData } from '../data/parsers/spotify';
 import { parseThirdFacetData } from '../data/parsers/thirdFacet';
 import { normalizeAndSortReceipts } from '../data/normalizers';
+import { validateReceipts } from '../data/validators';
 
 import { computeSpendingMetrics } from '../analytics/spending';
 import { computeSpotifyMetrics } from '../analytics/spotify';
@@ -71,6 +70,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   
   const [rawDatasets, setRawDatasets] = useState<Record<string, DatasetProfile>>({});
   const [allReceipts, setAllReceipts] = useState<LifeReceipt[]>([]);
+  const [totalSkippedCount, setTotalSkippedCount] = useState(0);
   
   // Filter states
   const [selectedDateRange, setSelectedDateRange] = useState<[string, string] | null>(null);
@@ -90,13 +90,17 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       let finReceipts: LifeReceipt[] = [];
       let spReceipts: LifeReceipt[] = [];
       let hhReceipts: LifeReceipt[] = [];
+      let cumulativeSkipped = 0;
 
       // 1. Load Financial Dataset
       const finUrl = resolveAssetUrl('data/Augmented_IndiaTransactMultiFacet2024.csv');
       try {
         const finRaw = await loadCSVFile(finUrl);
-        datasetProfiles['finance'] = profileDataset('finance', 'Financial Multi-Facet', finRaw);
-        finReceipts = parseFinancialData(finRaw);
+        const parsed = parseFinancialData(finRaw);
+        const validated = validateReceipts(parsed);
+        finReceipts = validated.validReceipts;
+        cumulativeSkipped += validated.skippedCount;
+        datasetProfiles['finance'] = profileDataset('finance', 'Financial Multi-Facet', finRaw, finReceipts.length);
       } catch (err: any) {
         datasetProfiles['finance'] = {
           id: 'finance',
@@ -104,6 +108,8 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
           filename: 'Augmented_IndiaTransactMultiFacet2024.csv',
           loaded: false,
           rowCount: 0,
+          validRowCount: 0,
+          skippedRowCount: 0,
           columns: [],
           detectedFields: {},
           error: err.message || 'Dataset file could not be loaded.',
@@ -114,8 +120,11 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const spUrl = resolveAssetUrl('data/spotify_history.csv');
       try {
         const spRaw = await loadCSVFile(spUrl, 20000);
-        datasetProfiles['spotify'] = profileDataset('spotify', 'Spotify History', spRaw);
-        spReceipts = parseSpotifyData(spRaw);
+        const parsed = parseSpotifyData(spRaw);
+        const validated = validateReceipts(parsed);
+        spReceipts = validated.validReceipts;
+        cumulativeSkipped += validated.skippedCount;
+        datasetProfiles['spotify'] = profileDataset('spotify', 'Spotify History', spRaw, spReceipts.length);
       } catch (err: any) {
         datasetProfiles['spotify'] = {
           id: 'spotify',
@@ -123,6 +132,8 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
           filename: 'spotify_history.csv',
           loaded: false,
           rowCount: 0,
+          validRowCount: 0,
+          skippedRowCount: 0,
           columns: [],
           detectedFields: {},
           error: err.message || 'Dataset file could not be loaded.',
@@ -133,8 +144,11 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const hhUrl = resolveAssetUrl('data/Daily%20Household%20Transactions.csv');
       try {
         const hhRaw = await loadCSVFile(hhUrl);
-        datasetProfiles['third'] = profileDataset('third', 'Daily Household Log', hhRaw);
-        hhReceipts = parseThirdFacetData(hhRaw);
+        const parsed = parseThirdFacetData(hhRaw);
+        const validated = validateReceipts(parsed);
+        hhReceipts = validated.validReceipts;
+        cumulativeSkipped += validated.skippedCount;
+        datasetProfiles['third'] = profileDataset('third', 'Daily Household Log', hhRaw, hhReceipts.length);
       } catch (err: any) {
         datasetProfiles['third'] = {
           id: 'third',
@@ -142,6 +156,8 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
           filename: 'Daily Household Transactions.csv',
           loaded: false,
           rowCount: 0,
+          validRowCount: 0,
+          skippedRowCount: 0,
           columns: [],
           detectedFields: {},
           error: err.message || 'Dataset file could not be loaded.',
@@ -149,6 +165,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       setRawDatasets(datasetProfiles);
+      setTotalSkippedCount(cumulativeSkipped);
 
       const combined = normalizeAndSortReceipts([finReceipts, spReceipts, hhReceipts]);
       setAllReceipts(combined);
@@ -191,7 +208,8 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const healthStatus: GlobalHealthStatus = useMemo(() => {
     const loadedCount = Object.values(rawDatasets).filter(d => d.loaded).length;
-    const totalRecords = allReceipts.length;
+    const totalRecords = Object.values(rawDatasets).reduce((acc, d) => acc + d.rowCount, 0);
+    const validRecords = allReceipts.length;
     
     let minDate = '2013-01-01';
     let maxDate = '2024-12-31';
@@ -204,10 +222,12 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       loadedCount,
       totalDatasets: 3,
       totalRecords,
+      validRecords,
+      skippedRecords: totalSkippedCount,
       overallDateRange: { min: minDate, max: maxDate },
       datasets: rawDatasets,
     };
-  }, [rawDatasets, allReceipts]);
+  }, [rawDatasets, allReceipts, totalSkippedCount]);
 
   const openEvidenceModal = (title: string, receipts: LifeReceipt[]) => {
     setActiveEvidenceTitle(title);

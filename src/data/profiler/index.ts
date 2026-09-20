@@ -1,9 +1,9 @@
 import type { RawCSVResult } from '../loaders';
-import type { DatasetProfile, ColumnInfo } from '../../types/profile';
+import type { DatasetProfile, ColumnInfo } from '../../types/data';
 import { parseFlexibleDate, formatDateStr } from '../../utils/dates';
 import { detectFieldName } from '../../utils/fieldDetection';
 
-export function profileDataset(id: string, name: string, data: RawCSVResult): DatasetProfile {
+export function profileDataset(id: string, name: string, data: RawCSVResult, validCount?: number): DatasetProfile {
   const columns: ColumnInfo[] = data.columns.map(col => {
     const samples = data.rows.slice(0, 50).map(r => r[col]).filter(v => v !== undefined && v !== null && v !== '');
     
@@ -50,12 +50,17 @@ export function profileDataset(id: string, name: string, data: RawCSVResult): Da
     }
   }
 
+  const actualValid = validCount !== undefined ? validCount : data.totalRows;
+  const skipped = Math.max(0, data.totalRows - actualValid);
+
   return {
     id,
     name,
     filename: data.filename,
     loaded: true,
     rowCount: data.totalRows,
+    validRowCount: actualValid,
+    skippedRowCount: skipped,
     columns,
     dateRange: minDate && maxDate ? {
       min: formatDateStr(minDate),

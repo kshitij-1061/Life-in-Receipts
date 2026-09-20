@@ -2,6 +2,7 @@ import React from 'react';
 import { useData } from '../hooks/useData';
 import { NetworkGraph } from '../components/charts/NetworkGraph';
 import { Share2, ShieldCheck, ChevronRight } from 'lucide-react';
+import { SectionHeader } from '../components/common/SectionHeader';
 
 export const Connections: React.FC = () => {
   const { connectionGraph, openEvidenceModal } = useData();
@@ -10,18 +11,13 @@ export const Connections: React.FC = () => {
     <div className="space-y-8 py-6 animate-fade-in">
       
       {/* Header */}
-      <div>
-        <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-widest text-accentMusic">
-          <Share2 className="w-3.5 h-3.5 text-accentCyan" />
-          <span>Signature Connection Engine</span>
-        </div>
-        <h2 className="text-3xl font-serif font-bold text-white mt-1">
-          CROSS-DATASET CONNECTIONS
-        </h2>
-        <p className="text-xs text-gray-400 mt-0.5">
-          Interactive network graph visualizing discovered relationships between card transactions, Spotify plays, and household micro-notes.
-        </p>
-      </div>
+      <SectionHeader
+        badge="Signature Connection Engine"
+        title="CROSS-DATASET CONNECTIONS"
+        subtitle="Interactive network graph visualizing discovered relationships between card transactions, Spotify plays, and household micro-notes."
+        icon={Share2}
+        badgeColor="text-accentCyan"
+      />
 
       {/* D3 Network Graph */}
       <NetworkGraph nodes={connectionGraph.nodes} edges={connectionGraph.edges} />
@@ -46,6 +42,12 @@ export const Connections: React.FC = () => {
 
             if (!r1 || !r2) return null;
 
+            const badgeColor = ev.classification === 'Strong'
+              ? 'bg-purple-500/10 text-purple-300 border-purple-500/30'
+              : ev.classification === 'Medium'
+              ? 'bg-pink-500/10 text-pink-300 border-pink-500/30'
+              : 'bg-gray-500/10 text-gray-400 border-gray-500/30';
+
             return (
               <div
                 key={edge.id}
@@ -53,8 +55,8 @@ export const Connections: React.FC = () => {
                 className="p-4 bg-surfaceHover/40 border border-surfaceBorder hover:border-accentCyan/50 rounded-xl cursor-pointer transition-all space-y-3"
               >
                 <div className="flex items-center justify-between text-xs">
-                  <span className="px-2 py-0.5 rounded bg-purple-500/10 text-purple-300 font-mono text-[10px] border border-purple-500/20">
-                    Strength Score: {(ev.strength * 100).toFixed(0)}%
+                  <span className={`px-2 py-0.5 rounded font-mono text-[10px] border ${badgeColor}`}>
+                    {ev.classification} Match • {(ev.strength * 100).toFixed(0)}%
                   </span>
                   <span className="text-gray-400 font-mono">{r1.dateStr}</span>
                 </div>

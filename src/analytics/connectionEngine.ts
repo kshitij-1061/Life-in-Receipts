@@ -1,4 +1,4 @@
-import type { LifeReceipt } from '../types/receipt';
+import type { LifeReceipt } from '../types/data';
 import type { ConnectionEdge, ConnectionEvidence, ConnectionNode } from '../types/analytics';
 import { getDiurnalPhase, WEEKDAYS } from '../utils/dates';
 
@@ -104,6 +104,9 @@ export function computeConnections(receipts: LifeReceipt[], maxConnections = 120
 
       if (totalScore >= 0.45) {
         const strength = Math.min(1.0, totalScore);
+        const classification: ConnectionEvidence['classification'] =
+          strength >= 0.75 ? 'Strong' : strength >= 0.6 ? 'Medium' : 'Weak';
+
         const reason = signals[0] || 'Statistical temporal co-occurrence';
 
         const evidence: ConnectionEvidence = {
@@ -111,6 +114,7 @@ export function computeConnections(receipts: LifeReceipt[], maxConnections = 120
           signals,
           supportingRecords: [r1, r2],
           strength,
+          classification,
           timeDeltaMinutes: timeDeltaMins,
         };
 

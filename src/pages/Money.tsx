@@ -2,6 +2,9 @@ import React, { useState } from 'react';
 import { useData } from '../hooks/useData';
 import { CircleDollarSign, TrendingUp, ShoppingBag, MapPin } from 'lucide-react';
 import { formatCurrency, formatNumber, formatDatePretty } from '../utils/formatters';
+import { SectionHeader } from '../components/common/SectionHeader';
+import { MetricCard } from '../components/common/MetricCard';
+import { EmptyState } from '../components/common/EmptyState';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip } from 'recharts';
 
 export const Money: React.FC = () => {
@@ -16,56 +19,43 @@ export const Money: React.FC = () => {
     <div className="space-y-8 py-6 animate-fade-in">
       
       {/* Header */}
-      <div>
-        <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-widest text-accentFinance">
-          <CircleDollarSign className="w-3.5 h-3.5" />
-          <span>Financial Facet Analytics</span>
-        </div>
-        <h2 className="text-3xl font-serif font-bold text-white mt-1">
-          MONEY & COMMERCE
-        </h2>
-        <p className="text-xs text-gray-400 mt-0.5">
-          Card transaction velocity, merchant distribution, category breakdowns, and high-value spending peaks.
-        </p>
-      </div>
+      <SectionHeader
+        badge="Financial Facet Analytics"
+        title="MONEY & COMMERCE"
+        subtitle="Card transaction velocity, merchant distribution, category breakdowns, and high-value spending peaks."
+        icon={CircleDollarSign}
+        badgeColor="text-accentFinance"
+      />
 
       {/* Metrics Row */}
       <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-        <div className="glass-card rounded-2xl p-5">
-          <div className="text-xs font-mono text-gray-400 uppercase">Total Card Spend</div>
-          <div className="text-3xl font-bold font-mono text-accentFinance mt-1">
-            {formatCurrency(spendingMetrics.totalAmount)}
-          </div>
-          <div className="text-xs text-gray-400 mt-1">
-            {formatNumber(spendingMetrics.transactionCount)} Total Transactions
-          </div>
-        </div>
+        <MetricCard
+          label="Total Card Spend"
+          value={formatCurrency(spendingMetrics.totalAmount)}
+          subtext={`${formatNumber(spendingMetrics.transactionCount)} Total Transactions`}
+          accentColor="text-accentFinance"
+        />
 
-        <div className="glass-card rounded-2xl p-5">
-          <div className="text-xs font-mono text-gray-400 uppercase">Average Transaction</div>
-          <div className="text-3xl font-bold font-mono text-white mt-1">
-            {formatCurrency(spendingMetrics.averageAmount)}
-          </div>
-          <div className="text-xs text-gray-400 mt-1">Per Card Purchase</div>
-        </div>
+        <MetricCard
+          label="Average Transaction"
+          value={formatCurrency(spendingMetrics.averageAmount)}
+          subtext="Per Card Purchase"
+          accentColor="text-white"
+        />
 
-        <div className="glass-card rounded-2xl p-5">
-          <div className="text-xs font-mono text-gray-400 uppercase">Weekend Share</div>
-          <div className="text-3xl font-bold font-mono text-accentYellow mt-1">
-            {formatCurrency(spendingMetrics.weekendVsWeekday.weekendAmount)}
-          </div>
-          <div className="text-xs text-gray-400 mt-1">Saturday & Sunday Purchases</div>
-        </div>
+        <MetricCard
+          label="Weekend Share"
+          value={formatCurrency(spendingMetrics.weekendVsWeekday.weekendAmount)}
+          subtext="Saturday & Sunday Purchases"
+          accentColor="text-accentYellow"
+        />
 
-        <div className="glass-card rounded-2xl p-5">
-          <div className="text-xs font-mono text-gray-400 uppercase">Largest Single Txn</div>
-          <div className="text-2xl font-bold font-mono text-emerald-400 mt-1">
-            {spendingMetrics.largestTransaction ? formatCurrency(spendingMetrics.largestTransaction.amount) : 'N/A'}
-          </div>
-          <div className="text-xs text-gray-400 truncate mt-1">
-            {spendingMetrics.largestTransaction?.title || 'None'}
-          </div>
-        </div>
+        <MetricCard
+          label="Largest Single Txn"
+          value={spendingMetrics.largestTransaction ? formatCurrency(spendingMetrics.largestTransaction.amount) : 'N/A'}
+          subtext={spendingMetrics.largestTransaction?.title || 'None'}
+          accentColor="text-emerald-400"
+        />
       </div>
 
       {/* Category Breakdown & Charts */}
@@ -154,43 +144,53 @@ export const Money: React.FC = () => {
           <h3 className="text-base font-bold text-white font-mono">
             Transaction Records ({displayTxns.length})
           </h3>
-          <button
-            onClick={() => openEvidenceModal('Financial Transaction Evidence', displayTxns)}
-            className="px-3 py-1.5 rounded-lg bg-surfaceHover border border-surfaceBorder text-xs text-accentCyan hover:text-white"
-          >
-            View as Evidence Drawer
-          </button>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          {displayTxns.slice(0, 9).map((txn) => (
-            <div
-              key={txn.id}
-              onClick={() => openEvidenceModal(`Transaction Detail: ${txn.title}`, [txn])}
-              className="p-4 rounded-xl bg-surfaceHover/40 border border-surfaceBorder hover:border-accentFinance/40 cursor-pointer transition-all space-y-2"
+          {displayTxns.length > 0 && (
+            <button
+              onClick={() => openEvidenceModal('Financial Transaction Evidence', displayTxns)}
+              className="px-3 py-1.5 rounded-lg bg-surfaceHover border border-surfaceBorder text-xs text-accentCyan hover:text-white"
             >
-              <div className="flex items-center justify-between text-xs">
-                <span className="px-2 py-0.5 rounded bg-orange-500/10 text-orange-400 font-mono text-[10px]">
-                  {txn.category || 'General'}
-                </span>
-                <span className="text-gray-400 font-mono">{formatDatePretty(txn.timestamp)}</span>
-              </div>
-
-              <div className="font-semibold text-white truncate">{txn.title}</div>
-
-              {txn.location && (
-                <div className="flex items-center gap-1 text-xs text-gray-400">
-                  <MapPin className="w-3 h-3 text-emerald-400" />
-                  <span className="truncate">{txn.location}</span>
-                </div>
-              )}
-
-              <div className="text-right font-mono font-bold text-accentFinance text-base pt-1">
-                {formatCurrency(txn.amount)}
-              </div>
-            </div>
-          ))}
+              View as Evidence Drawer
+            </button>
+          )}
         </div>
+
+        {displayTxns.length === 0 ? (
+          <EmptyState
+            title="No Financial Transactions Found"
+            description="There are no transactions matching your current filters."
+            onResetFilters={() => setSelectedCategoryFilter(null)}
+          />
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {displayTxns.slice(0, 9).map((txn) => (
+              <div
+                key={txn.id}
+                onClick={() => openEvidenceModal(`Transaction Detail: ${txn.title}`, [txn])}
+                className="p-4 rounded-xl bg-surfaceHover/40 border border-surfaceBorder hover:border-accentFinance/40 cursor-pointer transition-all space-y-2"
+              >
+                <div className="flex items-center justify-between text-xs">
+                  <span className="px-2 py-0.5 rounded bg-orange-500/10 text-orange-400 font-mono text-[10px]">
+                    {txn.category || 'General'}
+                  </span>
+                  <span className="text-gray-400 font-mono">{formatDatePretty(txn.timestamp)}</span>
+                </div>
+
+                <div className="font-semibold text-white truncate">{txn.title}</div>
+
+                {txn.location && (
+                  <div className="flex items-center gap-1 text-xs text-gray-400">
+                    <MapPin className="w-3 h-3 text-emerald-400" />
+                    <span className="truncate">{txn.location}</span>
+                  </div>
+                )}
+
+                <div className="text-right font-mono font-bold text-accentFinance text-base pt-1">
+                  {formatCurrency(txn.amount)}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
     </div>
